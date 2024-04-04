@@ -16,10 +16,16 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const turno = req.body;
+    const {nombre_reserva, hora_entrada, hora_salida, cancha} = req.body;
     const nuevoDetalle = await Detalles.addDetalle({})
-
-    const nuevoTurno = {...turno, detalle: nuevoDetalle._id};
+    
+    const nuevoTurno = {
+        nombre_reserva,
+        hora_entrada,
+        hora_salida,
+        cancha,
+        detalle: nuevoDetalle._id
+    };
     // Agregar el nuevo cancha al array de eventos
     const result = await Turnos.addReserva(nuevoTurno)
 

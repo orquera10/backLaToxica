@@ -25,10 +25,27 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-    const detalle = req.body;
+    const {productos_consumidos} = req.body;
     const detalleId = req.params.id;
+
+    // Calcular el total consumido sumando el producto de la cantidad y el precio unitario de cada producto_consumido
+    let total_consumido = 0;
+    productos_consumidos.forEach(producto => {
+        total_consumido += producto.cantidad * producto.producto.precio_unitario;
+    });
+
+    //
+
+    const total = total_consumido + total_alquiler;
+
     // Agregar el nuevo cancha al array de eventos
-    const result = await Detalles.updateDetalle(detalleId, detalle);
+    const detalleNuevo = {
+        productos_consumidos: productos_consumidos,
+        total_consumido: total_consumido,
+        total_alquiler: total_alquiler,
+        total: total
+    }
+    const result = await Detalles.updateDetalle(detalleId, detalleNuevo);
 
     // Responder con el nuevo cancha agregado
     res.status(200).json(result);
