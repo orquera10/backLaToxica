@@ -28,20 +28,27 @@ const reservasSchema = new mongoose.Schema({
 });
 
 reservasSchema.pre("findOne", function () {
-    this.populate('cancha')
-})
+    this.populate('cancha');
+    this.populate({ 
+        path: 'detalle',
+        populate: { 
+            path: 'productos_consumidos.producto',
+            model: 'Producto'
+        }
+    });
+});
 
 reservasSchema.pre("find", function () {
-    this.populate('cancha')
-})
+    this.populate('cancha');
+    this.populate({ 
+        path: 'detalle',
+        populate: { 
+            path: 'productos_consumidos.producto',
+            model: 'Producto'
+        }
+    });
+});
 
-reservasSchema.pre("findOne", function () {
-    this.populate('detalle')
-})
-
-reservasSchema.pre("find", function () {
-    this.populate('detalle')
-})
 
 // Definir el modelo para la reserva
 export const Reserva = mongoose.model('Reservas', reservasSchema);

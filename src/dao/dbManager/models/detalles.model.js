@@ -30,5 +30,9 @@ const detallesSchema = new mongoose.Schema({
     }
 });
 
+detallesSchema.pre("findOne", function () {
+    this.populate('productos_consumidos.producto')
+});
+
 // Definir el modelo para el detalle
 export const Detalle = mongoose.model('Detalle', detallesSchema);
