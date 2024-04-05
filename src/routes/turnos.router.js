@@ -56,7 +56,7 @@ router.delete('/:id', async (req, res) => {
 router.put('/:did/producto/:pid', async (req, res) => {
     const turnoId = req.params.did;
     const productoId = req.params.pid;
-    const { cantidad } = req.body;
+    const { cantidad = 1 } = req.body;
 
     const turno = await Turnos.getReservaById(turnoId);
     const producto = await Productos.getProductoById(productoId);
