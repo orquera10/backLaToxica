@@ -69,8 +69,8 @@ router.put('/:did/producto/:pid', async (req, res) => {
 
     const precio_producto = producto.precio_unitario;
 
-    const productoEncontrado = turno.detalle.productos_consumidos.findIndex(item => item.producto.toString() === productoId);
-
+    const productoEncontrado = turno.detalle.productos_consumidos.findIndex(item => item.producto._id.toString() === productoId);
+    
     let productos_nuevos
     let total_consumido
 
@@ -102,8 +102,38 @@ router.delete('/:did/producto/:pid', async (req, res) => {
     const turnoId = req.params.did;
     const productoId = req.params.pid;
 
-    const result = 
-    res.json(result);
+    const turno = await Turnos.getReservaById(turnoId);
+
+    // Verificar si el producto está en el detalle del turno
+    const indiceProducto = turno.detalle.productos_consumidos.findIndex(item => item.producto._id.toString() === productoId);
+
+    if (indiceProducto !== -1) {
+
+        const producto = await Productos.getProductoById(productoId);
+        const totalProducto = turno.detalle.productos_consumidos[indiceProducto].cantidad * producto.precio_unitario;
+        const total_consumido = turno.detalle.total_consumido - totalProducto;
+        const total = turno.detalle.total - totalProducto;
+
+        // Si el producto está en el detalle, eliminarlo
+        turno.detalle.productos_consumidos.splice(indiceProducto, 1);
+
+        // Actualizar el detalle del turno
+        const detalleActualizado = {
+            productos_consumidos: turno.detalle.productos_consumidos,
+            total_alquiler: turno.detalle.total_alquiler,
+            total_consumido: total_consumido,
+            total: total
+        };
+
+        await Detalles.updateDetalle(turno.detalle._id, detalleActualizado);
+
+        // Responder con éxito
+        res.status(200).json({ message: 'Producto eliminado del detalle del turno exitosamente.' });
+    } else {
+        // Si el producto no está en el detalle, responder con un mensaje de error
+        res.status(404).json({ message: 'El producto no está presente en el detalle del turno.' });
+    }
 });
+
 
 export default router;
