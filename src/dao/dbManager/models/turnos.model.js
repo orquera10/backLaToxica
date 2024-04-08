@@ -24,6 +24,10 @@ const reservasSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Detalle',
         required: true
+    },
+    evento_terminado: {
+        type: Boolean,
+        default: false // Por defecto, el evento no ha terminado
     }
 });
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Productos, Turnos, Detalles } from '../dao/factory.js';
+import { Productos, Turnos, Detalles, Canchas } from '../dao/factory.js';
 import moment from 'moment';
 
 const router = Router();
@@ -17,17 +17,30 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const { nombre_reserva, hora_entrada, hora_salida, cancha } = req.body;
-    const nuevoDetalle = await Detalles.addDetalle({})
+    const nuevoDetalle = await Detalles.addDetalle({});
+
+    const canchaElegida = await Canchas.getCanchaById(cancha);
+
+    // Convertir las cadenas de fecha a objetos Moment
+    const nueva_hora_entrada = moment.utc(hora_entrada);
+    const nueva_hora_salida = moment.utc(hora_salida);
+    // Calcular la diferencia en horas
+    const diferencia_en_horas = nueva_hora_salida.diff(nueva_hora_entrada, 'hours');
+
+    const total_alquiler = diferencia_en_horas * canchaElegida.precio_alquiler;
+
+    await Detalles.updateDetalle(nuevoDetalle._id, {total_alquiler: total_alquiler});
 
     const nuevoTurno = {
         nombre_reserva,
         hora_entrada,
         hora_salida,
         cancha,
-        detalle: nuevoDetalle._id
+        detalle: nuevoDetalle._id,
+        evento_terminado: false
     };
     // Agregar el nuevo cancha al array de eventos
-    const result = await Turnos.addReserva(nuevoTurno)
+    const result = await Turnos.addReserva(nuevoTurno);
 
     // Responder con el nuevo cancha agregado
     res.status(200).json(result);
@@ -61,11 +74,7 @@ router.put('/:did/producto/:pid', async (req, res) => {
     const turno = await Turnos.getReservaById(turnoId);
     const producto = await Productos.getProductoById(productoId);
 
-    // Convertir las cadenas de fecha a objetos Moment
-    const hora_entrada = moment.utc(turno.hora_entrada);
-    const hora_salida = moment.utc(turno.hora_salida);
-    // Calcular la diferencia en horas
-    const diferencia_en_horas = hora_salida.diff(hora_entrada, 'hours');
+    
 
     const precio_producto = producto.precio_unitario;
 
@@ -84,12 +93,12 @@ router.put('/:did/producto/:pid', async (req, res) => {
         total_consumido = turno.detalle.total_consumido + cantidad * precio_producto;
     }
 
-    const total_alquiler = diferencia_en_horas * turno.cancha.precio_alquiler;
-    const total = total_alquiler + total_consumido;
+    
+    const total = turno.detalle.total_alquiler + total_consumido;
 
     const detalleNuevo = {
         productos_consumidos: productos_nuevos,
-        total_alquiler: total_alquiler,
+        total_alquiler: turno.detalle.total_alquiler,
         total_consumido: total_consumido,
         total: total
     }
